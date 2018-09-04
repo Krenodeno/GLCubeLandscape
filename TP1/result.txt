@@ -1,0 +1,9 @@
+#Thomas Fromont
+
+#CPU Intel i5 5200U
+
+#objet = cube texturé
+
+100 objets : CPU 16ms GPU 1ms
+10000 objets : CPU 60ms GPU 58ms
+1000000 objets : CPU 1s GPU 5s
