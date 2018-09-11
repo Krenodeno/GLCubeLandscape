@@ -3,7 +3,12 @@
 #CPU Intel i5 5200U
 
 #objet = cube texturé
-
+# 1 draw par instance
 100 objets : CPU 16ms GPU 1ms
 10000 objets : CPU 60ms GPU 58ms
 1000000 objets : CPU 1s GPU 5s
+
+# 1 draw pour toutes les instances
+1000 objets : CPU 16ms GPU 1ms
+8000 objets : CPU 13ms GPU 3ms
+1000000 objets : CPU 200ns GPU 94ms
