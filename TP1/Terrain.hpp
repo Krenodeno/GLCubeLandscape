@@ -15,22 +15,36 @@ struct Terrain {
 	 * j : position en hauteur de l'image
 	 */
 	float getHeight(int i, int j) {
-		return a.y * (b.y - a.y) * image(i, j).r;
+		return a.y + (b.y - a.y) * image(i, j).r;
 	}
 
 	float getHeight(float x, float y) {
-		return a.y * (b.y - a.y) * image.sample(x, y).r;
+		return a.y + (b.y - a.y) * image.sample(x, y).r;
 	}
 
 	/** Retourne le point de l'espace entre a et b au pixel (i,j) de l'image
+	 * i : position en largeur de l'image, doit etre entre 0 et image.width()
+	 * j : position en hauteur de l'image, doit etre entre 0 et image.height()
 	 */
-	Point getPoint(int i, int j) {
+	vec3 getPoint(int i, int j) {
 		float x = a.x + (b.x - a.x) * ((float)i / (float)(image.width() - 1));
 		float z = a.z + (b.z - a.z) * ((float)j / (float)(image.height() - 1));
-		return Point(x, getHeight(i, j), z);
+		return vec3(x, getHeight(i, j), z);
+	}
+
+	/** Retourne le point de l'espace 3D entre a et b au point (x,y) de l'image
+	 * interpole la hauteur donné par la heightmap
+	 * x : position en largeur de l'image, doit etre entre 0 et image.width()
+	 * y : position en hauteur de l'image, doit etre entre 0 et image.height()
+	 */
+	vec3 getPoint(float x, float y) {
+		float px = a.x + (b.x - a.x) * (x / (float)(image.width() - 1));
+		float pz = a.z + (b.z - a.z) * (y / (float)(image.height() - 1));
+		return vec3(px, getHeight(x, y), pz);
 	}
 
 	/** Retourne le gradient du pixel (i,j) de l'image
+	 * i : position en largeur de l'image
 	 */
 	vec2 Gradient(int i, int j) {
 		float x, y;
@@ -55,6 +69,7 @@ struct Terrain {
 	}
 
 	/** Retourne la pente au pixel (i,j) de l'image
+	 * i : position en largeur de l'image
 	 */
 	float getSlope(int i, int j) {
 		auto G = Gradient(i, j);
@@ -79,14 +94,11 @@ struct Terrain {
 
 		for (int i = 0; i < nbCaseX; ++i) {
 			for (int j = 0; j < nbCaseZ; ++j) {
-				// coordonnées monde
-				float x = a.x + unit * i;
-				float z = a.z + unit * j;
 				// coordonnées heightmap
 				float u = sampleX * i;
 				float v = sampleZ * j;
-				auto y = std::floor((b.y - a.y) * image.sample(u, v).r);
-				vec3 p(x, y, z);
+				vec3 p = getPoint(u, v);
+				p.y = std::floor(p.y);
 				instances.push_back(p);
 			}
 		}

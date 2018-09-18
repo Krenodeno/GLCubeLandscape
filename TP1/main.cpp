@@ -25,12 +25,11 @@ public:
 		m_objet= read_mesh("data/cube.obj");
 
 		terrain.image = read_image("data/Clipboard02.png");
-		// Triche facile
-		float rayon = 1000/2;
+		float rayon = 500/2;
 		terrain.a = Point(-rayon, 0.f, -rayon);
 		terrain.b = Point(rayon, 40.f, rayon);
 
-		positions = terrain.voxelize(1.0f);
+		positions = terrain.voxelize(1.f);
 
 		// model matrix for instances
 		for (auto position : positions) {
