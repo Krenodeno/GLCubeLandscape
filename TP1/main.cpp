@@ -6,7 +6,10 @@
 #include "app_time.h"		// AppTime
 #include "program.h"		// program
 #include "uniforms.h"		// uniforms
-#include "vec.h"
+#include "vec.h"			// Transform
+#include "image_io.h"		// Image
+
+#include "Terrain.hpp"		// Terrain
 
 
 class TP : public AppTime
@@ -21,17 +24,21 @@ public:
 		// Mesh
 		m_objet= read_mesh("data/cube.obj");
 
+		terrain.image = read_image("data/Clipboard02.png");
+		// Triche facile
+		float rayon = 1000/2;
+		terrain.a = Point(-rayon, 0.f, -rayon);
+		terrain.b = Point(rayon, 40.f, rayon);
+
+		positions = terrain.voxelize(1.0f);
+
 		// model matrix for instances
-		float padding = 2.f;
-		int size = 100;
-		int center = size / 2;
-		for (int i = -center; i < center; ++i)
-			for (int j = -center; j < center; ++j)
-				for (int k = -center; k < center; ++k)
-					instances.push_back(Translation(padding * i, padding * k, padding * j));
+		for (auto position : positions) {
+			instances.push_back(Translation(position.x, position.y, position.z));
+		}
 
 		// Camera
-		m_camera.lookat(Point(), 100);
+		m_camera.lookat(Point(), rayon*2);
 
 		// Shader program
 		program = read_program("TP1/instancing.glsl");
@@ -114,8 +121,11 @@ public:
         m_objet.release();
         glDeleteTextures(1, &m_texture);
 
+
 		glDeleteVertexArrays(0, &vao);
 		glDeleteBuffers(1, &vertex_buffer);
+		glDeleteBuffers(1, &texcoords_buffer);
+		glDeleteBuffers(1, &instance_buffer);
 
         return 0;
     }
@@ -152,6 +162,11 @@ public:
     }
 
 protected:
+
+	Terrain terrain;
+
+	std::vector<vec3> positions;
+
 	GLuint program;
     Mesh m_objet;
 	GLuint vertex_buffer;
