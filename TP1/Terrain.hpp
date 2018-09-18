@@ -61,7 +61,7 @@ struct Terrain {
 		if (i == image.width()-1)
 			x = getHeight(i-1, j) - getHeight(i, j);
 		if (j == 0)
-			x = getHeight(i, j) - getHeight(i, j+1);
+			y = getHeight(i, j) - getHeight(i, j+1);
 		if (j == image.height()-1)
 			y = getHeight(i, j-1) - getHeight(i, j);
 
