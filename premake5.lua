@@ -44,3 +44,12 @@ project "TP1"
 	files {"TP1/**.hpp", "TP1/**.cpp"}
 
 	links "gKit"
+
+	project "TP2"
+		language "C++"
+		kind "ConsoleApp"
+		targetdir "bin"
+		--files (gKitFiles)
+		files {"TP2/**.hpp", "TP2/**.cpp"}
+
+		links "gKit"
