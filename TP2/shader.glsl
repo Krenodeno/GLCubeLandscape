@@ -51,10 +51,10 @@ void main()
 	else if (frag_position.y < 10) {
 		fragment_color = green;
 	}
-	else if (frag_position.y < 15) {
+	else if (frag_position.y < 30) {
 		fragment_color = grey;
 	}
-	else if (frag_position.y < 30) {
+	else if (frag_position.y < 40) {
 		fragment_color = white;
 	}
 }

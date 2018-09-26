@@ -11,6 +11,8 @@
 #include "image_io.h"		// Image
 
 #include "Terrain.hpp"		// Terrain
+#include "Region.hpp"
+#include "Scene.hpp"
 
 
 class TP : public AppTime
@@ -23,17 +25,14 @@ public:
     int init( )
     {
 		// Mesh
-		cube= read_mesh("data/cube.obj");
+		cube = read_mesh("data/cube.obj");
 
-		terrain.image = read_image("data/Clipboard02.png");
-		float rayon = 500/2;
-		terrain.a = Point(-rayon, 0.f, -rayon);
-		terrain.b = Point(rayon, 40.f, rayon);
+		scene.terrain.image = read_image("data/Clipboard02.png");
 
-		positions = terrain.voxelize(1.f);
+		scene.GenSceneFromTerrain(64, 512, 40, 512);
 
 		// Camera
-		m_camera.lookat(Point(), rayon*2);
+		m_camera.lookat(Point(), 512);
 
 		// Shader program
 		program = read_program("TP2/shader.glsl");
@@ -63,7 +62,7 @@ public:
 		glGenBuffers(1, &instance_buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, instance_buffer);
 		{
-			glBufferData(GL_ARRAY_BUFFER, positions.size() * sizeof(vec3), positions.data(), GL_STATIC_DRAW);
+			glBufferData(GL_ARRAY_BUFFER, scene.instances.size() * sizeof(vec3), scene.instances.data(), GL_STATIC_DRAW);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -148,7 +147,7 @@ public:
 		// bind VAO and draw
 		glBindVertexArray(vao);
 		{
-			glDrawArraysInstanced(GL_TRIANGLES, 0, cube.vertex_count(), positions.size());
+			glDrawArraysInstanced(GL_TRIANGLES, 0, cube.vertex_count(), scene.instances.size());
 		}
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -158,9 +157,7 @@ public:
 
 protected:
 
-	Terrain terrain;
-
-	std::vector<vec3> positions;
+	Scene scene;
 
 	GLuint program;
 	Mesh cube;

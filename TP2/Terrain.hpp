@@ -65,32 +65,9 @@ struct Terrain {
 	/** Retourne l'ensemble des points de la bounding box en fonction de la heightmap
 	 * unit : La taille des voxels (donc l'écart entre deux points)
 	 */
-	std::vector<vec3> voxelize(float unit) {
-		std::vector<vec3> points;
+	std::vector<vec3> voxelize(float, unsigned int, unsigned int, unsigned int, unsigned int);
 
-		float nbCaseX = (b.x - a.x) / unit;
-		float nbCaseZ = (b.z - a.z) / unit;
-		float nbCaseH = (b.y - a.y) / unit;
-
-		float imageWidth = image.width();
-		float imageHeight = image.height();
-
-		float sampleX = imageWidth / nbCaseX;
-		float sampleZ = imageHeight / nbCaseZ;
-
-		for (int i = 0; i < nbCaseX; ++i) {
-			for (int j = 0; j < nbCaseZ; ++j) {
-				// coordonnées heightmap
-				float u = sampleX * i;
-				float v = sampleZ * j;
-				vec3 p = getPoint(u, v);
-				p.y = std::floor(p.y);
-				points.push_back(p);
-				// TODO ajouter cubes en dessous si (altitude - altitude min des voisins) > 1
-			}
-		}
-		return points;
-	}
+	float minNeighborsHeight(float, float);
 
 };
 

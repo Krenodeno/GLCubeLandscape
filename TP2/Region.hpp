@@ -3,6 +3,9 @@
 
 struct Region {
 
+	int firstInstance;
+	unsigned int size;
+
 };
 
 #endif
