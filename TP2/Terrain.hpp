@@ -4,29 +4,71 @@
 #include <image.h>
 #include <vec.h>
 
+#include <cassert>
 #include <vector>
 
 struct Terrain {
 	Image image;
 	Point a, b;
 
-	/** Retourne l'altitude interpollée dans l'espace entre a et b au point (i,j) de l'image
-	 * x : position en largeur de l'image, doit etre entre 0 et image.width()
-	 * y : position en hauteur de l'image, doit etre entre 0 et image.height()
+	/* Retourne l'altitude d'un point de l'image
+	 * u, v coordonnées image entre 0.0 et 1.0
 	 */
-	float getHeight(float x, float y) {
-		return a.y + (b.y - a.y) * image.sample(x, y).r;
+	 float getHeight(float u, float v) {
+		 assert(u >= 0.f && u <= 1.f && v >= 0.f && v <= 1.f);
+		 return a.y + (b.y - a.y) * image.sample(u * image.width(), v * image.height()).r;
+	 }
+
+	/** Retourne le point dans l'AABB définie par a et b
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 *
+	 */
+	 Point getPoint(float u, float v) {
+		float px = a.x + (b.x - a.x) * u;
+		float py = getHeight(u, v);
+		float pz = a.z + (b.z - a.z) * v;
+		return Point(px, py, pz);
+	 }
+
+	/** Calcul du gradient en fonction de la hauteur au point (u,v) de l'image
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 */
+	vec2 Gradient(float u, float v, float e) {
+		float x, y;
+
+		// Cas général
+		if (u > 0.f && u < image.width() - e)
+			x = (getHeight(u+e, v) - getHeight(u-e, v)) / 2.f;
+		if (v > 0.f && v < image.height() - e)
+			y = (getHeight(u, v+e) - getHeight(u, v-e)) / 2.f;
+
+		// Cas limites : bords
+		if (u - e <= 0.f)
+			x = getHeight(u, v) - getHeight(u+e, v);
+		if (u >= image.width() - e)
+			x = getHeight(u-e, v) - getHeight(u, v);
+		if (v - e <= 0.f)
+			y = getHeight(u, v) - getHeight(u, v+e);
+		if (v >= image.height() - e)
+			y = getHeight(u, v-e) - getHeight(u, v);
+
+		return vec2(x, y);
 	}
 
-	/** Retourne le point de l'espace 3D entre a et b au point (x,y) de l'image
-	 * interpole la hauteur donné par la heightmap
-	 * x : position en largeur de l'image, doit etre entre 0 et image.width()
-	 * y : position en hauteur de l'image, doit etre entre 0 et image.height()
+	/** Retourne la normal au point u, v
+	 * u, v coordonnées image entre 0.0 et 1.0
 	 */
-	vec3 getPoint(float x, float y) {
-		float px = a.x + (b.x - a.x) * (x / (float)(image.width() - 1));
-		float pz = a.z + (b.z - a.z) * (y / (float)(image.height() - 1));
-		return vec3(px, getHeight(x, y), pz);
+	Vector getNormal(float u, float v, float e) {
+		auto G = Gradient(u, v, e);
+		return normalize(Vector(-G.x, -G.y, 1));
+	}
+
+	/** Retourne la pente au point u, v
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 */
+	float getSlope(float u, float v, float e) {
+		auto G = Gradient(u, v, e);
+		return length(Vector(G.x, 0.f, G.y));
 	}
 
 	/** Retourne le gradient du pixel (i,j) de l'image
@@ -54,6 +96,11 @@ struct Terrain {
 		return vec2(x, y);
 	}
 
+	/*Vector getNormal(int x, int y) {
+		auto G = Gradient(i, j);
+		return Vector(-G.x, -G.y, 1);
+	}*/
+
 	/** Retourne la pente au pixel (i,j) de l'image
 	 * i : position en largeur de l'image
 	 */
@@ -61,13 +108,6 @@ struct Terrain {
 		auto G = Gradient(i, j);
 		return length(Vector(G.x, 0.f, G.y));
 	}
-
-	/** Retourne l'ensemble des points de la bounding box en fonction de la heightmap
-	 * unit : La taille des voxels (donc l'écart entre deux points)
-	 */
-	std::vector<vec3> voxelize(float, unsigned int, unsigned int, unsigned int, unsigned int);
-
-	float minNeighborsHeight(float, float);
 
 };
 

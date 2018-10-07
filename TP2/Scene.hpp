@@ -4,15 +4,26 @@
 #include <vector>
 
 #include "Terrain.hpp"
-#include "Region.hpp"
+
+struct Region {
+
+	// index de la première instance dans la scène
+	unsigned int firstInstance;
+	// nombre d'instance
+	unsigned int size;
+
+};
 
 struct Scene {
 	Terrain terrain;
 	std::vector<Region> regions;
 
-	std::vector<vec3> instances;
+	std::vector<Point> instances;
+	std::vector<Vector> normals;
 
-	void GenSceneFromTerrain(unsigned int, unsigned int, unsigned int, unsigned int);
+	void genSceneFromTerrain(Vector, Vector);
+	void voxelizeTerrainRegion(float, float, Vector);
+	float minNeighborsHeight(float, float);
 };
 
 #endif
