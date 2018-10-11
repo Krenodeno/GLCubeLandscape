@@ -14,6 +14,8 @@
 #include "Terrain.hpp"		// Terrain
 #include "Scene.hpp"		// Scene
 
+#include "AABB.hpp"
+
 
 class TP : public AppTime
 {
@@ -52,7 +54,7 @@ public:
 		program_print_errors(program);
 		glUseProgram(program);
 
-		specFactor = 1.f;
+		specFactor = 16.f;
 
 		// Vertex buffer (location=0)
 		glGenBuffers(1, &vertex_buffer);
@@ -144,7 +146,7 @@ public:
 		glDeleteTextures(1, &m_texture);
 
 
-		glDeleteVertexArrays(0, &vao);
+		glDeleteVertexArrays(1, &vao);
 		glDeleteBuffers(1, &vertex_buffer);
 		glDeleteBuffers(1, &normal_buffer);
 		glDeleteBuffers(1, &texcoords_buffer);

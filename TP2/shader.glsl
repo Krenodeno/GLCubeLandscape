@@ -10,7 +10,6 @@ layout (location = 5) in vec3 instancePos;
 
 out vec2 vertex_texcoord;
 out vec3 light_pos;
-out vec3 cam_pos;
 out vec3 frag_normal;
 out vec3 frag_position;
 
@@ -28,9 +27,9 @@ void main()
 
 	// To fragment shader
 	vertex_texcoord = texcoord;
-	frag_position = instancePos;
+	frag_position = pos;
 	frag_normal = normal;
-	light_pos = vec3(0, 50, 0);
+	light_pos = vec3(0, 50, 50);
 }
 
 #endif
@@ -50,9 +49,9 @@ out vec4 fragment_color;
 
 uniform sampler2D texture0;
 
-float diffuse(float k)
+float diffuse()
 {
-	return k / M_PI;
+	return 1.0 / M_PI;
 }
 
 float specular(vec3 position, vec3 normal, vec3 eye, vec3 light, float m)
@@ -62,24 +61,51 @@ float specular(vec3 position, vec3 normal, vec3 eye, vec3 light, float m)
 
 	vec3 o = normalize(eye - position);
 
-	vec3 h = (o - l) / 2.0;
+	vec3 h = (l + o) / 2.0;
 
-	float cos_theta = max(0.0, dot(h, normal));
+	float cos_theta_h = max(0.0, dot(h, normalize(normal)));
 
 	float coeff = (m + 8) / (8 * M_PI);
 
-	return coeff * pow(cos_theta, m);
+	return coeff * pow(cos_theta_h, m);
 }
 
 void main()
 {
-	float k = 0.1;
 
-	vec4 color = vec4(1.0);
+	vec3 baseColor;
 
-	float reflectance = diffuse(k) + ((1 - k) * specular(frag_position, frag_normal, view_pos, light_pos, specular_factor));
+	vec3 green = vec3(0, 0.5, 0);
+	vec3 sand = vec3(0.5, 0.3, 0.1);
+	vec3 blue = vec3(0, 0, 0.5);
+	vec3 grey = vec3(0.57, 0.55, 0.52);
+	vec3 white = vec3(0.9, 0.9, 0.9);
+	if (frag_position.y < 1) {
+		baseColor = blue;
+	}
+	else if (frag_position.y < 3) {
+		baseColor = sand;
+	}
+	else if (frag_position.y < 10) {
+		baseColor = green;
+	}
+	else if (frag_position.y < 30) {
+		baseColor = grey;
+	}
+	else if (frag_position.y < 40) {
+		baseColor = white;
+	}
 
-	fragment_color = vec4(reflectance.xxx, 1.0);
+	float k = 0.5;
+
+	float reflectance = (k * diffuse()) + ((1 - k) * specular(frag_position, frag_normal, view_pos, light_pos, specular_factor));
+
+	float cos_theta = max(0.0, dot(normalize(frag_normal), normalize(light_pos - frag_position)));
+
+	fragment_color = vec4(baseColor + reflectance.xxx * cos_theta, 1.0);
+	//fragment_color = vec4(abs(frag_normal), 1.0);
+	// material_color = base_color * diffuse + light_color * specular
+	// fragment_color = shadowfactor * material_color
 }
 
 #endif

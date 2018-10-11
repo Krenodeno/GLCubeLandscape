@@ -6,6 +6,20 @@
 
 #include <cassert>
 #include <vector>
+/*
+class CB {
+	std::vector<Point> cubes;
+};
+
+
+class HeightMap;
+
+class Terrain {
+public:
+	CB GetCB(const HeightMap&);
+	CB GetCB(xxxxxx);
+};
+*/
 
 struct Terrain {
 	Image image;
@@ -60,7 +74,7 @@ struct Terrain {
 	 */
 	Vector getNormal(float u, float v, float e) {
 		auto G = Gradient(u, v, e);
-		return normalize(Vector(-G.x, -G.y, 1));
+		return normalize(Vector(-G.x, 1, -G.y));
 	}
 
 	/** Retourne la pente au point u, v

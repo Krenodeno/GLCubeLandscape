@@ -1,66 +1,40 @@
 #include "Terrain.hpp"
 
-std::vector<vec3> Terrain::voxelize(float unit, unsigned int posX, unsigned int posY, unsigned int sizeX, unsigned int sizeY) {
-	std::vector<vec3> points;
+#include "HeightMap.hpp"
+/*
+CB Terrain::GetCB(const HeightMap &) {
+	std::vector<Point> points;
 
-	float nbCaseX = (b.x - a.x) / unit;
-	float nbCaseZ = (b.z - a.z) / unit;
-	float nbCaseH = (b.y - a.y) / unit;
+	// On part du principe que les voxels sont de taille unitaire (1.0f)
+	// sinon il faudrait diviser par la taille des voxels
+	float nbCaseX = terrain.b.x - terrain.a.x;
+	float nbCaseZ = terrain.b.z - terrain.a.z;
 
-	float imageWidth = image.width();
-	float imageHeight = image.height();
+	// espacement entre chaque point
+	float sampleX = 1.f / nbCaseX;
+	float sampleZ = 1.f / nbCaseZ;
 
-	float sampleX = imageWidth / nbCaseX;
-	float sampleZ = imageHeight / nbCaseZ;
-
-	for (unsigned int i = posX; i < posX + sizeX; ++i) {
-		for (unsigned int j = posY; j < posY + sizeY; ++j) {
-			// coordonnées heightmap
-			float u = sampleX * i;
-			float v = sampleZ * j;
-			vec3 p = getPoint(u, v);
+	for (unsigned int i = 0; i < regionSize.x; ++i) {
+		for (unsigned int j = 0; j < regionSize.z; ++j) {
+			float pu = u + (sampleX * (float)i);
+			float pv = v + (sampleZ * (float)j);
+			// coordonnées heightmap (entre 0.0 et 1.0)
+			auto p = terrain.getPoint(pu, pv);
 			p.y = std::floor(p.y);
+			auto normal = terrain.getNormal(pu, pv, sampleX);
 			points.push_back(p);
+			normals.push_back(normal);
 			// Combler les trous
 			float minNeighborsH = minNeighborsHeight(u, v);
-			if (p.y - minNeighborsH > 1.0) {
-				// Ajouter un point en dessous TODO en ajouter plusieurs
-				vec3 q = p;
-				q.y -= 1.0f;
-				points.push_back(q);
+			while (p.y - minNeighborsH > 1.f) {
+				// Ajouter un point en dessous
+				p.y -= 1.f;
+				points.push_back(p);
+				normals.push_back(normal);
+				minNeighborsH += 1.f;
 			}
 		}
 	}
-	return points;
-}
 
-float Terrain::minNeighborsHeight(float x, float y) {
-	float minNeighborsH = std::numeric_limits<float>::max();
-	for (int neighbor = 0; neighbor < 4; neighbor++) {
-		vec3 n;
-		switch (neighbor) {
-		case 0:
-			if (x > (float)image.width())
-				break;
-			n = getPoint(x+1, y);
-			break;
-		case 1:
-			if (y > (float)image.height())
-				break;
-			n = getPoint(x, y+1);
-			break;
-		case 2:
-			if (x < 1.f)
-				break;
-			n = getPoint(x-1, y);
-			break;
-		case 3:
-			if (y < 1.f)
-				break;
-			n = getPoint(x, y-1);
-		}
-		n.y = std::floor(n.y);
-		minNeighborsH = std::min(n.y, minNeighborsH);
-	}
-	return minNeighborsH;
 }
+*/
