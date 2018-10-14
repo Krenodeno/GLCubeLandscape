@@ -17,11 +17,19 @@ void Scene::genSceneFromTerrain(Vector terrainSize, Vector regionSize) {
 
 	for (unsigned int i = 0; i < nbRegionX; ++i) {
 		for (unsigned int j = 0; j < nbRegionZ; ++j) {
-			unsigned int firstInstance = instances.size();
+			int firstInstance = instances.size();
 			unsigned int size = instances.size();
 			voxelizeTerrainRegion(sampleX * (float)i, sampleZ * (float)j, regionSize);
+
 			size = instances.size() - size;
-			regions.push_back({firstInstance, size});
+			Point a(terrain.a.x + regionSize.x * i, terrain.a.y, terrain.a.z + regionSize.z * j);
+			Point b(a.x + regionSize.x, a.y + regionSize.y, a.z + regionSize.z);
+			AABB boundingBox = {a, b};
+			regions.push_back({boundingBox, firstInstance, size});
+
+			std::cout << "Bounding Box Région : {" << boundingBox.pMin.x << ", " << boundingBox.pMin.y << ", " << boundingBox.pMin.z << " - ";
+			std::cout << boundingBox.pMax.x << ", " << boundingBox.pMax.y << ", " << boundingBox.pMax.z << "}";
+			std::cout << "\tfirst = " << firstInstance << ", count = " << size << std::endl;
 		}
 	}
 }
@@ -55,8 +63,8 @@ void Scene::voxelizeTerrainRegion(float u, float v, Vector regionSize) {
 			points.push_back(p);
 			normals.push_back(normal);
 			// Combler les trous
-			float minNeighborsH = minNeighborsHeight(u, v);
-			while (p.y - minNeighborsH > 1.f) {
+			float minNeighborsH = minNeighborsHeight(pu, pv);
+			while (p.y - minNeighborsH >= 1.f) {
 				// Ajouter un point en dessous
 				p.y -= 1.f;
 				points.push_back(p);

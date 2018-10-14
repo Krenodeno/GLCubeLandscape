@@ -4,11 +4,13 @@
 #include <vector>
 
 #include "Terrain.hpp"
+#include "AABB.hpp"
 
 struct Region {
-
+	// Bounding box pour le test de visibilité
+	AABB boundingBox;
 	// index de la première instance dans la scène
-	unsigned int firstInstance;
+	int firstInstance;
 	// nombre d'instance
 	unsigned int size;
 
