@@ -4,6 +4,8 @@
 #include <image.h>
 #include <vec.h>
 
+//#include "AABB.hpp"
+
 #include <cassert>
 #include <vector>
 /*
@@ -16,10 +18,28 @@ class HeightMap;
 
 class Terrain {
 public:
-	CB GetCB(const HeightMap&);
-	CB GetCB(xxxxxx);
-};
+	CB GetCB(const HeightMap&, AABB = {});
 */
+	/** Retourne le point dans l'AABB définie par a et b
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 */
+//	Point getPoint(float u, float v);
+
+	/** Calcul du gradient en fonction de la hauteur au point (u,v) de l'image
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 */
+//	vec2 Gradient(float u, float v, float e);
+
+	/** Retourne la normal au point u, v
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 */
+//	Vector getNormal(float u, float v, float e);
+
+	/** Retourne la pente au point u, v
+	 * u, v coordonnées image entre 0.0 et 1.0
+	 */
+//	float getSlope(float u, float v, float e);
+//};
 
 struct Terrain {
 	Image image;

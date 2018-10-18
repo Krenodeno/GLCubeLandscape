@@ -37,4 +37,22 @@ CB Terrain::GetCB(const HeightMap &) {
 	}
 
 }
+
+
+
+Point Terrain::getPoint(float u, float v) {
+
+}
+
+vec2 Terrain::Gradient(float u, float v, float e) {
+
+}
+
+Vector Terrain::getNormal(float u, float v, float e) {
+
+}
+
+float Terrain::getSlope(float u, float v, float e) {
+
+}
 */

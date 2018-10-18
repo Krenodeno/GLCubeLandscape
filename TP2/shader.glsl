@@ -96,7 +96,7 @@ void main()
 		baseColor = white;
 	}
 
-	float k = 0.5;
+	float k = 0.1;
 
 	float reflectance = (k * diffuse()) + ((1 - k) * specular(frag_position, frag_normal, view_pos, light_pos, specular_factor));
 

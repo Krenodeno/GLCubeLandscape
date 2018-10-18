@@ -16,6 +16,13 @@
 
 //#include "AABB.hpp"
 
+Transform ortho(float left, float right, float top, float bottom, float near, float far) {
+	return Transform(
+		2/(right-left), 0, 0, -((right+left)/(right-left)),
+		0, 2/(top-bottom), 0, -((top+bottom)/(top-bottom)),
+		0, 0, -(2/(far-near)), -((far+near)/(far-near)));
+}
+
 
 class TP : public AppTime
 {
@@ -28,8 +35,6 @@ public:
 	{
 		// Mesh
 		cube = read_mesh("data/cube.obj");
-
-		cpt = 0;
 /*
 		{
 			Point pMin(-256.f, 0.f, -256.f);
@@ -47,6 +52,9 @@ public:
 		scene.genSceneFromTerrain(Vector(256.f, 40.f, 256.f), Vector(64.f, 64.f, 64.f));
 
 		std::cout << "Nombre d'instances = " << scene.instances.size() << std::endl;
+
+		// Texture (Uniform)
+		m_texture = read_texture(2, "data/debug2x2red.png");
 
 		// Camera
 		m_camera.lookat(Point(), 512.f);
@@ -82,8 +90,6 @@ public:
 			//glBufferData(GL_ARRAY_BUFFER, cube.normal_buffer_size(), cube.normal_buffer(), GL_STATIC_DRAW);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		// Texture (Uniform)
-		m_texture = read_texture(2, "data/debug2x2red.png");
 
 		// instances (location=5)
 		glGenBuffers(1, &instance_buffer);
@@ -172,29 +178,9 @@ public:
 		else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
 			m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
-		if (key_state('r')) {
-			clear_key_state('r');
-			cpt = (cpt+1) % scene.instances.size();
-		}
-
 		Transform projection = m_camera.projection(1024, 640, 50);
 		Transform view = m_camera.view();
 		Transform model = Transform();
-/*
-		// TODO TEST DE VISIBILITE
-		std::vector<int> firsts;	// indices des instances à dessiner
-		std::vector<int> counts;	// nombres d'instances à dessiner
-		Transform mvp = projection * view * model;
-		Transform mvpi = mvp.inverse();
-		for (auto region : scene.regions) {
-			if (visible(mvp, region.boundingBox) && visible(mvpi, region.boundingBox)) {
-				firsts.push_back(region.firstInstance);
-				counts.push_back(region.size);
-			}
-		}
-*/
-		//printf(m_console, 0, 3, "Nombre d'instances affichées : %u", firsts.size());
-		//std::cout << "first" << scene.region[cpt].firstInstance << "\n";
 
 		// instanced draw
 		glUseProgram(program);
@@ -208,14 +194,14 @@ public:
 		// bind VAO and draw
 		glBindVertexArray(vao);
 		{
+			// Test de visibilité
 			Transform mvp = projection * view * model;
-			//Transform mvpi = mvp.inverse();
+			Transform mvpi = mvp.inverse();
 			for (const auto& region : scene.regions) {
-				if (visible(mvp, region.boundingBox) /*&& visible(mvpi, region.boundingBox)*/) {
+				if (visible(mvp, region.boundingBox)) {
 					glDrawArraysInstancedBaseInstance(GL_TRIANGLES, 0, cube.vertex_count(), (GLsizei)region.size, region.firstInstance);
 				}
 			}
-			//glDrawArraysInstanced(GL_TRIANGLES, 0, cube.vertex_count(), scene.instances.size());
 		}
 		glBindVertexArray(0);
 		glUseProgram(0);
@@ -224,8 +210,6 @@ public:
 	}
 
 protected:
-	int cpt;
-
 	Scene scene;
 
 	GLuint program;

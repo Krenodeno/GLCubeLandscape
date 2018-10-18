@@ -22,8 +22,8 @@ void Scene::genSceneFromTerrain(Vector terrainSize, Vector regionSize) {
 			voxelizeTerrainRegion(sampleX * (float)i, sampleZ * (float)j, regionSize);
 
 			size = instances.size() - size;
-			Point a(terrain.a.x + regionSize.x * i, terrain.a.y, terrain.a.z + regionSize.z * j);
-			Point b(a.x + regionSize.x, a.y + regionSize.y, a.z + regionSize.z);
+			Point a(-0.5f + terrain.a.x + regionSize.x * i, -0.5f + terrain.a.y, -0.5f + terrain.a.z + regionSize.z * j);
+			Point b(0.5f + a.x + regionSize.x, 0.5f + a.y + regionSize.y, 0.5f + a.z + regionSize.z);
 			AABB boundingBox = {a, b};
 			regions.push_back({boundingBox, firstInstance, size});
 
