@@ -5,17 +5,19 @@
 layout (location = 0) in vec3 position;
 layout (location = 1) in vec2 texcoord;
 layout (location = 2) in vec3 normal;
-layout (location = 4) in vec4 color;
+//layout (location = 4) in vec4 color;
 layout (location = 5) in vec3 instancePos;
 
 out vec2 vertex_texcoord;
 out vec3 light_pos;
 out vec3 frag_normal;
 out vec3 frag_position;
+out vec4 lightSpaceFragPos;
 
 uniform mat4 projection;
 uniform mat4 view;
 uniform mat4 model;
+uniform mat4 lightSpace;
 
 void main()
 {
@@ -28,8 +30,9 @@ void main()
 	// To fragment shader
 	vertex_texcoord = texcoord;
 	frag_position = pos;
+	lightSpaceFragPos = lightSpace * vec4(pos, 1.0);
 	frag_normal = normal;
-	light_pos = vec3(0, 50, 50);
+	light_pos = vec3(0, 1000, 0);
 }
 
 #endif
@@ -41,6 +44,7 @@ in vec2 vertex_texcoord;
 in vec3 light_pos;
 in vec3 frag_normal;
 in vec3 frag_position;
+in vec4 lightSpaceFragPos;
 
 uniform float specular_factor;
 uniform vec3 view_pos;
@@ -48,6 +52,7 @@ uniform vec3 view_pos;
 out vec4 fragment_color;
 
 uniform sampler2D texture0;
+uniform sampler2D shadowMap;
 
 float diffuse()
 {
@@ -68,6 +73,22 @@ float specular(vec3 position, vec3 normal, vec3 eye, vec3 light, float m)
 	float coeff = (m + 8) / (8 * M_PI);
 
 	return coeff * pow(cos_theta_h, m);
+}
+
+float lambert(vec3 normal, vec3 light, vec3 position) {
+	return max(0.0, dot(normalize(normal), normalize(light - position)));
+}
+
+float shadow(vec4 lightSpacePosition) {
+	// Needed in case of a perspective projection
+	vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
+	// Range is [-1,1], change it to [0,1]
+	projCoords = (projCoords * 0.5) + 0.5;
+	float closestDepth = texture(shadowMap, projCoords.xy).r;
+	float currentDepth = projCoords.z;
+	// check wether current frag in in shadw or not
+	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+	return shadow;
 }
 
 void main()
@@ -96,13 +117,15 @@ void main()
 		baseColor = white;
 	}
 
-	float k = 0.1;
+	float k = 0.5;
 
-	float reflectance = (k * diffuse()) + ((1 - k) * specular(frag_position, frag_normal, view_pos, light_pos, specular_factor));
+	float reflectance = (k * diffuse()) + ((1 - k) * specular(frag_position, frag_normal, view_pos, view_pos, specular_factor));
 
-	float cos_theta = max(0.0, dot(normalize(frag_normal), normalize(light_pos - frag_position)));
+	float cos_theta = lambert(frag_normal, view_pos, frag_position);
 
-	fragment_color = vec4(baseColor + reflectance.xxx * cos_theta, 1.0);
+	vec4 texture_color = texture(texture0, vertex_texcoord);
+
+	fragment_color = texture_color * vec4(baseColor * /*(1.0 - shadow(lightSpaceFragPos)) * */reflectance.xxx * cos_theta, 1.0);
 	//fragment_color = vec4(abs(frag_normal), 1.0);
 	// material_color = base_color * diffuse + light_color * specular
 	// fragment_color = shadowfactor * material_color
