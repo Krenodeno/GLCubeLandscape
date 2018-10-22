@@ -8,10 +8,9 @@ layout (location = 2) in vec3 normal;
 //layout (location = 4) in vec4 color;
 layout (location = 5) in vec3 instancePos;
 
-out vec2 vertex_texcoord;
-out vec3 light_pos;
-out vec3 frag_normal;
-out vec3 frag_position;
+out vec2 vertexTexCoord;
+out vec3 fragNormal;
+out vec3 fragWorldPos;
 out vec4 lightSpaceFragPos;
 
 uniform mat4 projection;
@@ -28,11 +27,10 @@ void main()
 	gl_Position = mvp * vec4(pos, 1.0);
 
 	// To fragment shader
-	vertex_texcoord = texcoord;
-	frag_position = pos;
+	vertexTexCoord = texcoord;
+	fragWorldPos = pos;
 	lightSpaceFragPos = lightSpace * vec4(pos, 1.0);
-	frag_normal = normal;
-	light_pos = vec3(0, 1000, 0);
+	fragNormal = normal;
 }
 
 #endif
@@ -40,14 +38,13 @@ void main()
 
 #define M_PI 3.1415926535897932384626433832795
 
-in vec2 vertex_texcoord;
-in vec3 light_pos;
-in vec3 frag_normal;
-in vec3 frag_position;
+in vec2 vertexTexCoord;
+in vec3 fragNormal;
+in vec3 fragWorldPos;
 in vec4 lightSpaceFragPos;
 
-uniform float specular_factor;
-uniform vec3 view_pos;
+uniform vec3 viewWorldPos;
+uniform vec3 lightWorldPos;
 
 out vec4 fragment_color;
 
@@ -87,7 +84,7 @@ float shadow(vec4 lightSpacePosition) {
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
 	// check wether current frag in in shadw or not
-	float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+	float shadow = (currentDepth > closestDepth) ? 1.0 : 0.0;
 	return shadow;
 }
 
@@ -101,32 +98,35 @@ void main()
 	vec3 blue = vec3(0, 0, 0.5);
 	vec3 grey = vec3(0.57, 0.55, 0.52);
 	vec3 white = vec3(0.9, 0.9, 0.9);
-	if (frag_position.y < 1) {
+	if (fragWorldPos.y < 1) {
 		baseColor = blue;
 	}
-	else if (frag_position.y < 3) {
+	else if (fragWorldPos.y < 3) {
 		baseColor = sand;
 	}
-	else if (frag_position.y < 10) {
+	else if (fragWorldPos.y < 10) {
 		baseColor = green;
 	}
-	else if (frag_position.y < 30) {
+	else if (fragWorldPos.y < 30) {
 		baseColor = grey;
 	}
-	else if (frag_position.y < 40) {
+	else if (fragWorldPos.y < 40) {
 		baseColor = white;
 	}
 
-	float k = 0.5;
+	float k = 0.9;
+	float specularFactor = 16.0;
 
-	float reflectance = (k * diffuse()) + ((1 - k) * specular(frag_position, frag_normal, view_pos, view_pos, specular_factor));
+	float reflectance = (k * diffuse()) + ((1 - k) * specular(fragWorldPos, fragNormal, viewWorldPos, lightWorldPos, specularFactor));
 
-	float cos_theta = lambert(frag_normal, view_pos, frag_position);
+	float cos_theta = lambert(fragNormal, lightWorldPos, fragWorldPos);
 
-	vec4 texture_color = texture(texture0, vertex_texcoord);
+	vec4 texture_color = texture(texture0, vertexTexCoord);
 
-	fragment_color = texture_color * vec4(baseColor * /*(1.0 - shadow(lightSpaceFragPos)) * */reflectance.xxx * cos_theta, 1.0);
-	//fragment_color = vec4(abs(frag_normal), 1.0);
+	float inShadow = shadow(lightSpaceFragPos);
+
+	fragment_color = texture_color * vec4(baseColor * cos_theta * (1.0 - inShadow), 1.0);
+	//fragment_color = vec4(abs(fragNormal), 1.0);
 	// material_color = base_color * diffuse + light_color * specular
 	// fragment_color = shadowfactor * material_color
 }

@@ -70,8 +70,6 @@ public:
 		program_print_errors(program);
 		//glUseProgram(program);
 
-		specFactor = 16.f;
-
 		// Vertex buffer (location=0)
 		glGenBuffers(1, &vertex_buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
@@ -244,9 +242,9 @@ public:
 		program_uniform(program, "projection", projection);
 		program_uniform(program, "view", view);
 		program_uniform(program, "model", model);
-		program_uniform(program, "view_pos", m_camera.position());
-		program_uniform(program, "specular_factor", specFactor);
 		program_uniform(program, "lightSpace", sunMVP);
+		program_uniform(program, "viewWorldPos", m_camera.position());
+		program_uniform(program, "lightWorldPos", sun.position());
 		program_use_texture(program, "texture0", 0, m_texture);
 		program_use_texture(program, "shadowMap", 0, depthTexture);
 
@@ -280,7 +278,6 @@ protected:
 	GLuint m_texture;
 	Orbiter m_camera;
 	GLuint program;
-	float specFactor;
 
 	// Depth pass
 	GLuint depthShader;
