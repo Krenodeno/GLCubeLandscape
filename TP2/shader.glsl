@@ -25,6 +25,7 @@ void main()
 
 	// Vertex output
 	gl_Position = mvp * vec4(pos, 1.0);
+	//gl_Position = lightSpace * vec4(pos, 1.0);
 
 	// To fragment shader
 	vertexTexCoord = texcoord;
@@ -76,15 +77,17 @@ float lambert(vec3 normal, vec3 light, vec3 position) {
 	return max(0.0, dot(normalize(normal), normalize(light - position)));
 }
 
-float shadow(vec4 lightSpacePosition) {
+float shadow(vec4 lightSpacePosition, vec3 lightDir, vec3 normal) {
 	// Needed in case of a perspective projection
 	vec3 projCoords = lightSpacePosition.xyz / lightSpacePosition.w;
 	// Range is [-1,1], change it to [0,1]
 	projCoords = (projCoords * 0.5) + 0.5;
 	float closestDepth = texture(shadowMap, projCoords.xy).r;
 	float currentDepth = projCoords.z;
+	// prevent shadow acne by adding bias
+	float bias = 0.00008;
 	// check wether current frag in in shadw or not
-	float shadow = (currentDepth > closestDepth) ? 1.0 : 0.0;
+	float shadow = (currentDepth - bias > closestDepth) ? 1.0 : 0.0;
 	return shadow;
 }
 
@@ -114,19 +117,19 @@ void main()
 		baseColor = white;
 	}
 
-	float k = 0.9;
-	float specularFactor = 16.0;
 
+	// Blinn-Phong shadind
+	float k = 0.5;
+	float specularFactor = 16.0;
 	float reflectance = (k * diffuse()) + ((1 - k) * specular(fragWorldPos, fragNormal, viewWorldPos, lightWorldPos, specularFactor));
 
 	float cos_theta = lambert(fragNormal, lightWorldPos, fragWorldPos);
 
 	vec4 texture_color = texture(texture0, vertexTexCoord);
 
-	float inShadow = shadow(lightSpaceFragPos);
+	float inShadow = shadow(lightSpaceFragPos, lightWorldPos - fragWorldPos, fragNormal);
 
-	fragment_color = texture_color * vec4(baseColor * cos_theta * (1.0 - inShadow), 1.0);
-	fragment_color = vec4((1.0 - inShadow).xxx, 1.0);
+	fragment_color = (texture_color * vec4(baseColor, 1.0)) * (1.0 - inShadow) * cos_theta;
 	//fragment_color = vec4(abs(fragNormal), 1.0);
 	// material_color = base_color * diffuse + light_color * specular
 	// fragment_color = shadowfactor * material_color

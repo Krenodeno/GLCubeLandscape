@@ -61,6 +61,8 @@ public:
 
 		// Sun
 		sun.lookat(Point(0.f, 0.f, 0.f), 1000.f);
+		shadowmapWidth = 2048;
+		shadowmapHeight = 2048;
 
 		depthShader = read_program("TP2/depth.glsl");
 		program_print_errors(depthShader);
@@ -147,7 +149,7 @@ public:
 
 		glGenTextures(1, &depthTexture);
 		glBindTexture(GL_TEXTURE_2D, depthTexture);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1024, 1024, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, shadowmapWidth, shadowmapHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -202,15 +204,16 @@ public:
 		else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
 			m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
-		sun.rotation(0, 0.5f);
+		if (key_state('g'))
+			sun.rotation(0, 0.5f);
 
 
 		// Depth Pass
-		glViewport(0, 0, 1024, 1024);	// depth texture size
+		glViewport(0, 0, shadowmapWidth, shadowmapHeight);	// depth texture size
 		glBindFramebuffer(GL_FRAMEBUFFER, depthpass);
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// matrix
-		Transform sunProj = ortho(-128, 128, 0.1f, 128, -128, 10000);
+		Transform sunProj = ortho(-128, 128, 128, -128, 0.1f, 10000);
 		Transform sunView = sun.view();
 		Transform sunModel = Transform();
 		Transform sunMVP = sunProj * sunView * sunModel;
@@ -248,7 +251,7 @@ public:
 		program_uniform(program, "viewWorldPos", m_camera.position());
 		program_uniform(program, "lightWorldPos", sun.position());
 		program_use_texture(program, "texture0", 0, m_texture);
-		program_use_texture(program, "shadowMap", 0, depthTexture);
+		program_use_texture(program, "shadowMap", 1, depthTexture);
 
 		// glBindVertexArray(vao);
 
@@ -286,6 +289,7 @@ protected:
 	GLuint depthpass;
 	GLuint depthTexture;
 	Orbiter sun;
+	unsigned int shadowmapWidth, shadowmapHeight;
 };
 
 
