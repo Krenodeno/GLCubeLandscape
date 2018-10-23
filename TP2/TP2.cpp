@@ -60,7 +60,7 @@ public:
 		m_camera.lookat(Point(), 512.f);
 
 		// Sun
-		sun.lookat(Point(-128.f, 0.f, 128.f), Point(-128.f, 40.f, 128.f));
+		sun.lookat(Point(0.f, 0.f, 0.f), 1000.f);
 
 		depthShader = read_program("TP2/depth.glsl");
 		program_print_errors(depthShader);
@@ -202,13 +202,15 @@ public:
 		else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
 			m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
 
+		sun.rotation(0, 0.5f);
+
 
 		// Depth Pass
 		glViewport(0, 0, 1024, 1024);	// depth texture size
 		glBindFramebuffer(GL_FRAMEBUFFER, depthpass);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glClear(GL_DEPTH_BUFFER_BIT);
 		// matrix
-		Transform sunProj = ortho(-128, 128, -128, 128, -128, 128);
+		Transform sunProj = ortho(-128, 128, 0.1f, 128, -128, 10000);
 		Transform sunView = sun.view();
 		Transform sunModel = Transform();
 		Transform sunMVP = sunProj * sunView * sunModel;

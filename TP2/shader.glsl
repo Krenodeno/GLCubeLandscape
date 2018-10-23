@@ -126,6 +126,7 @@ void main()
 	float inShadow = shadow(lightSpaceFragPos);
 
 	fragment_color = texture_color * vec4(baseColor * cos_theta * (1.0 - inShadow), 1.0);
+	fragment_color = vec4((1.0 - inShadow).xxx, 1.0);
 	//fragment_color = vec4(abs(fragNormal), 1.0);
 	// material_color = base_color * diffuse + light_color * specular
 	// fragment_color = shadowfactor * material_color
