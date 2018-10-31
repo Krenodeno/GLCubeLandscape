@@ -6,4 +6,4 @@
       - [ ] Gestion de la mémoire (FIFO VBO)
 - [x] Blinn-Phong
 - [ ] Textures en fonction de l'altitude/la pente
-- [ ] Shdow Mapping
+- [x] Shdow Mapping
