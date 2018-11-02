@@ -25,7 +25,7 @@ void main()
 
 	// Vertex output
 	gl_Position = mvp * vec4(pos, 1.0);
-	//gl_Position = lightSpace * vec4(pos, 1.0);
+	//gl_Position = lightSpace * vec4(pos, 1.0);	// for debug: draw sun's view
 
 	// To fragment shader
 	vertexTexCoord = texcoord;
@@ -46,11 +46,15 @@ in vec4 lightSpaceFragPos;
 
 uniform vec3 viewWorldPos;
 uniform vec3 lightWorldPos;
+uniform sampler2D shadowMap;
+
+uniform sampler2D grassTop;
+uniform sampler2D grassSide;
+uniform sampler2D sand;
+uniform sampler2D stone;
+uniform sampler2D clay;
 
 out vec4 fragment_color;
-
-uniform sampler2D texture0;
-uniform sampler2D shadowMap;
 
 float diffuse()
 {
@@ -95,42 +99,47 @@ void main()
 {
 
 	vec3 baseColor;
+	vec4 texture_color;
 
-	vec3 green = vec3(0, 0.5, 0);
-	vec3 sand = vec3(0.5, 0.3, 0.1);
-	vec3 blue = vec3(0, 0, 0.5);
-	vec3 grey = vec3(0.57, 0.55, 0.52);
-	vec3 white = vec3(0.9, 0.9, 0.9);
-	if (fragWorldPos.y < 1) {
-		baseColor = blue;
-	}
-	else if (fragWorldPos.y < 3) {
-		baseColor = sand;
-	}
-	else if (fragWorldPos.y < 10) {
-		baseColor = green;
-	}
-	else if (fragWorldPos.y < 30) {
-		baseColor = grey;
-	}
-	else if (fragWorldPos.y < 40) {
+	vec3 green =  vec3(0, 0.5, 0);
+	vec3 orange = vec3(0.5, 0.3, 0.1);
+	vec3 blue =   vec3(0, 0, 0.5);
+	vec3 grey =   vec3(0.57, 0.55, 0.52);
+	vec3 white =  vec3(1.0);
+
+	if (fragWorldPos.y < 1.5) {
 		baseColor = white;
+		texture_color= texture(clay, vertexTexCoord);
+	}
+	else if (fragWorldPos.y < 3.5) {
+		baseColor = white;
+		texture_color= texture(sand, vertexTexCoord);
+	}
+	else if (fragWorldPos.y < 10.5) {
+		baseColor = green;
+		texture_color= texture(grassTop, vertexTexCoord);
+	}
+	else if (fragWorldPos.y < 30.5) {
+		baseColor = white;
+		texture_color= texture(stone, vertexTexCoord);
+	}
+	else if (fragWorldPos.y < 40.5) {
+		baseColor = white;
+		texture_color= texture(grassTop, vertexTexCoord);
 	}
 
 
 	// Blinn-Phong shadind
-	float k = 0.5;
-	float specularFactor = 16.0;
+	float k = 0.5;					// could be a channel of a texture
+	float specularFactor = 16.0;	// could be a channel of a texture
 	float reflectance = (k * diffuse()) + ((1 - k) * specular(fragWorldPos, fragNormal, viewWorldPos, lightWorldPos, specularFactor));
 
 	float cos_theta = lambert(fragNormal, lightWorldPos, fragWorldPos);
 
-	vec4 texture_color = texture(texture0, vertexTexCoord);
-
+	// Shadowmapping
 	float inShadow = shadow(lightSpaceFragPos, lightWorldPos - fragWorldPos, fragNormal);
 
 	fragment_color = (texture_color * vec4(baseColor, 1.0)) * (1.0 - inShadow) * cos_theta;
-	//fragment_color = vec4(abs(fragNormal), 1.0);
 	// material_color = base_color * diffuse + light_color * specular
 	// fragment_color = shadowfactor * material_color
 }

@@ -53,8 +53,12 @@ public:
 
 		std::cout << "Nombre d'instances = " << scene.instances.size() << std::endl;
 
-		// Texture (Uniform)
-		m_texture = read_texture(0, "data/grass_top.png");
+		// Textures (Uniform)
+		grassTopTexture = read_texture(1, "data/grass_top.png");
+		grassSideTexture = read_texture(2, "data/grass_side.png");
+		sandTexture = read_texture(3, "data/sand.png");
+		stoneTexture = read_texture(4, "data/stone.png");
+		clayTexture = read_texture(5, "data/clay.png");
 
 		// Camera
 		m_camera.lookat(Point(), 512.f);
@@ -175,7 +179,12 @@ public:
 	int quit( )
 	{
 		cube.release();
-		glDeleteTextures(1, &m_texture);
+		// Delete textures
+		glDeleteTextures(1, &grassTopTexture);
+		glDeleteTextures(1, &grassSideTexture);
+		glDeleteTextures(1, &sandTexture);
+		glDeleteTextures(1, &stoneTexture);
+		glDeleteTextures(1, &clayTexture);
 
 		// Depth pass
 		glDeleteFramebuffers(1, &depthpass);
@@ -250,10 +259,17 @@ public:
 		program_uniform(program, "lightSpace", sunMVP);
 		program_uniform(program, "viewWorldPos", m_camera.position());
 		program_uniform(program, "lightWorldPos", sun.position());
-		program_use_texture(program, "texture0", 0, m_texture);
-		program_use_texture(program, "shadowMap", 1, depthTexture);
+		program_use_texture(program, "shadowMap", 0, depthTexture);
 
-		// glBindVertexArray(vao);
+		// Work with a limited number of textures
+		// If more texture are needed, have to bind textures in loop
+		program_use_texture(program, "grassTop",  1, grassTopTexture);
+		program_use_texture(program, "grassSide", 2, grassSideTexture);
+		program_use_texture(program, "sand",      3, sandTexture);
+		program_use_texture(program, "stone",     4, stoneTexture);
+		program_use_texture(program, "clay",      5, clayTexture);
+
+		// glBindVertexArray(vao);	// already binded
 
 		// Test de visibilité
 		for (const auto& region : scene.regions) {
@@ -280,7 +296,12 @@ protected:
 	GLuint vao;
 
 	// Color pass
-	GLuint m_texture;
+	GLuint grassTopTexture;
+	GLuint grassSideTexture;
+	GLuint sandTexture;
+	GLuint stoneTexture;
+	GLuint clayTexture;
+
 	Orbiter m_camera;
 	GLuint program;
 
