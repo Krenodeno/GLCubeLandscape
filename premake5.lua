@@ -14,22 +14,22 @@ workspace "TPs"
 
 	cppdialect "C++11"
 
-configuration "debug"
-	symbols "on"
+	filter "configurations:debug"
+		symbols "on"
 
-configuration "release"
-	optimize "speed"
+	filter "configurations:release"
+		optimize "speed"
 
-configuration "linux"
-	buildoptions { "-W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable", "-pipe" }
-	links { "GLEW", "SDL2", "SDL2_image", "GL" }
+	filter "system:linux"
+		buildoptions { "-W -Wall -Wextra -Wsign-compare -Wno-unused-parameter -Wno-unused-function -Wno-unused-variable", "-pipe" }
+		links { "GLEW", "SDL2", "SDL2_image", "GL" }
 
-configuration { "linux", "release" }
-	buildoptions { "-mtune=native -march=native" }
-	buildoptions { "-flto" }
-	linkoptions { "-flto" }
-	buildoptions { "-fopenmp" }
-	linkoptions { "-fopenmp" }
+	filter { "system:linux", "configurations:release" }
+		buildoptions { "-mtune=native -march=native" }
+		buildoptions { "-flto" }
+		linkoptions { "-flto" }
+		buildoptions { "-fopenmp" }
+		linkoptions { "-fopenmp" }
 
 project "gKit"
 	language "C++"
@@ -39,7 +39,6 @@ project "gKit"
 project "TP1"
 	language "C++"
 	kind "ConsoleApp"
-	--files (gKitFiles)
 	files {"TP1/**.hpp", "TP1/**.cpp"}
 
 	links "gKit"
@@ -47,7 +46,6 @@ project "TP1"
 project "TP2"
 	language "C++"
 	kind "ConsoleApp"
-	--files (gKitFiles)
 	files {"TP2/**.hpp", "TP2/**.cpp"}
 	--buildoptions { "-fno-omit-frame-pointer" }
 	--buildoptions { "-fsanitize=undefined,address" }
