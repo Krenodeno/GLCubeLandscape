@@ -12,6 +12,7 @@ workspace "TPs"
 
 	includedirs (gKitDir .. "src/gKit")
 
+	language "C++"
 	cppdialect "C++11"
 
 	filter "configurations:debug"
@@ -32,19 +33,16 @@ workspace "TPs"
 		linkoptions { "-fopenmp" }
 
 project "gKit"
-	language "C++"
 	kind "StaticLib"
 	files (gKitFiles)
 
 project "TP1"
-	language "C++"
 	kind "ConsoleApp"
 	files {"TP1/**.hpp", "TP1/**.cpp"}
 
 	links "gKit"
 
 project "TP2"
-	language "C++"
 	kind "ConsoleApp"
 	files {"TP2/**.hpp", "TP2/**.cpp"}
 	--buildoptions { "-fno-omit-frame-pointer" }
