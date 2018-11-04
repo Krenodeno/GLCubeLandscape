@@ -48,11 +48,11 @@ uniform vec3 viewWorldPos;
 uniform vec3 lightWorldPos;
 uniform sampler2D shadowMap;
 
-uniform sampler2D grassTop;
-uniform sampler2D grassSide;
-uniform sampler2D sand;
-uniform sampler2D stone;
 uniform sampler2D clay;
+uniform sampler2D grass;
+uniform sampler2D sand;
+uniform sampler2D snow;
+uniform sampler2D stone;
 
 out vec4 fragment_color;
 
@@ -117,7 +117,7 @@ void main()
 	}
 	else if (fragWorldPos.y < 10.5) {
 		baseColor = green;
-		texture_color= texture(grassTop, vertexTexCoord);
+		texture_color= texture(grass, vertexTexCoord);
 	}
 	else if (fragWorldPos.y < 30.5) {
 		baseColor = white;
@@ -125,7 +125,7 @@ void main()
 	}
 	else if (fragWorldPos.y < 40.5) {
 		baseColor = white;
-		texture_color= texture(grassTop, vertexTexCoord);
+		texture_color= texture(snow, vertexTexCoord);
 	}
 
 

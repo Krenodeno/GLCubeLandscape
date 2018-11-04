@@ -10,17 +10,35 @@
 #include "mat.h"			// mat, Transform
 #include "image_io.h"		// Image
 
-//#include "HeighMap.hpp"		// HeightMap
 #include "Terrain.hpp"		// Terrain
 #include "Scene.hpp"		// Scene
 
-//#include "AABB.hpp"		// AABB
+#include "FreeFlyCamera.hpp"	// FlyCamera
+
 
 Transform ortho(float left, float right, float top, float bottom, float near, float far) {
 	return Transform(
 		2.f/(right-left), 0, 0, -((right+left)/(right-left)),
 		0, 2.f/(top-bottom), 0, -((top+bottom)/(top-bottom)),
 		0, 0, -(2.f/(far-near)), -((far+near)/(far-near)));
+}
+
+ImageData assemble(const ImageData& upLeft, const ImageData& upRight, const ImageData& downLeft, const ImageData& downRight) {
+	assert(upLeft.channels == upRight.channels && upRight.channels == downLeft.channels && downLeft.channels == downRight.channels);
+	assert(upLeft.width == downLeft.width && upRight.width == downRight.width);
+	assert(upLeft.height == upRight.height && downLeft.height == downRight.height);
+	ImageData ret(upLeft.width + upRight.width, upLeft.height + downLeft.height, upLeft.channels);
+
+	ret.data.assign(upLeft.data.begin(), upLeft.data.end());
+	ret.data.insert(ret.data.end(), upRight.data.begin(), upRight.data.end());
+	ret.data.insert(ret.data.end(), downLeft.data.begin(), downLeft.data.end());
+	ret.data.insert(ret.data.end(), downRight.data.begin(), downRight.data.end());
+
+	return ret;
+}
+
+ImageData assemble(const ImageData& image) {
+	return assemble(image, image, image, image);
 }
 
 
@@ -34,31 +52,29 @@ public:
 	int init( )
 	{
 		// Mesh
-		cube = read_mesh("data/cube.obj");
-/*
-		{
-			Point pMin(-256.f, 0.f, -256.f);
-			Point pMax(256.f, 40.f, 256.f);
-			HeightMap heightmap(read_image("data/Clipboard02.png"));
+		cube = read_mesh("data/m_cube.obj");
+		billboard = read_mesh("data/billboard.obj");
 
-			Terrain terrain;
-			terrain.GetCB(heightmap);
-
-
-		}
-*/
 		scene.terrain.image = read_image("data/Clipboard02.png");
 
 		scene.genSceneFromTerrain(Vector(256.f, 40.f, 256.f), Vector(64.f, 64.f, 64.f));
 
 		std::cout << "Nombre d'instances = " << scene.instances.size() << std::endl;
 
-		// Textures (Uniform)
-		grassTopTexture = read_texture(1, "data/grass_top.png");
-		grassSideTexture = read_texture(2, "data/grass_side.png");
-		sandTexture = read_texture(3, "data/sand.png");
-		stoneTexture = read_texture(4, "data/stone.png");
-		clayTexture = read_texture(5, "data/clay.png");
+		// base Textures
+		auto grassTopData = read_image_data("data/grass_top.png");
+		auto grassSideData = read_image_data("data/grass_side.png");
+		auto sandData = read_image_data("data/sand.png");
+		auto stoneData = read_image_data("data/stone.png");
+		auto clayData = read_image_data("data/clay.png");
+		auto snowData = read_image_data("data/snow.png");
+
+		// Textures uniforms
+		clayTexture = make_texture(1, assemble(clayData));
+		grassTexture = make_texture(2, assemble(grassTopData, grassSideData, grassTopData, grassTopData));
+		sandTexture = make_texture(3, assemble(sandData));
+		snowGrassTexture = make_texture(4, assemble(snowData));
+		stoneTexture = make_texture(5, assemble(stoneData));
 
 		// Camera
 		m_camera.lookat(Point(), 512.f);
@@ -96,8 +112,8 @@ public:
 		glGenBuffers(1, &normal_buffer);
 		glBindBuffer(GL_ARRAY_BUFFER, normal_buffer);
 		{
-			//glBufferData(GL_ARRAY_BUFFER, scene.normals.size() * sizeof(vec3), scene.normals.data(), GL_STATIC_DRAW);
-			glBufferData(GL_ARRAY_BUFFER, cube.normal_buffer_size(), cube.normal_buffer(), GL_STATIC_DRAW);
+			//glBufferData(GL_ARRAY_BUFFER, scene.normals.size() * sizeof(vec3), scene.normals.data(), GL_STATIC_DRAW);	//normals from heightmap
+			glBufferData(GL_ARRAY_BUFFER, cube.normal_buffer_size(), cube.normal_buffer(), GL_STATIC_DRAW);	//cube's normals
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 
@@ -180,12 +196,11 @@ public:
 	{
 		cube.release();
 		// Delete textures
-		glDeleteTextures(1, &grassTopTexture);
-		glDeleteTextures(1, &grassSideTexture);
-		glDeleteTextures(1, &sandTexture);
-		glDeleteTextures(1, &stoneTexture);
 		glDeleteTextures(1, &clayTexture);
-
+		glDeleteTextures(1, &grassTexture);
+		glDeleteTextures(1, &sandTexture);
+		glDeleteTextures(1, &snowGrassTexture);
+		glDeleteTextures(1, &stoneTexture);
 		// Depth pass
 		glDeleteFramebuffers(1, &depthpass);
 		glDeleteTextures(1, &depthTexture);
@@ -207,11 +222,20 @@ public:
 		unsigned int mb = SDL_GetRelativeMouseState(&mx, &my);
 
 		if(mb & SDL_BUTTON(1))              // le bouton gauche est enfonce
-			m_camera.rotation(mx, my);
+			fly.rotate(Vector(mx, my, 0.f)); //m_camera.rotation(mx, my);
 		else if(mb & SDL_BUTTON(3))         // le bouton droit est enfonce
 			m_camera.move(mx);
 		else if(mb & SDL_BUTTON(2))         // le bouton du milieu est enfonce
 			m_camera.translation((float) mx / (float) window_width(), (float) my / (float) window_height());
+
+		if (key_state('z'))
+			fly.move(Vector(0.f, 0.f, -1.f));
+		if (key_state('d'))
+			fly.move(Vector(1.f, 0.f, 0.f));
+		if (key_state('q'))
+			fly.move(Vector(-1.f, 0.f, 0.f));
+		if (key_state(' '))
+			fly.translate(Vector(0.f, 1.f, 0.f));
 
 		if (key_state('g'))
 			sun.rotation(0, 0.5f);
@@ -246,7 +270,7 @@ public:
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		Transform projection = m_camera.projection(window_width(), window_height(), 50);
-		Transform view = m_camera.view();
+		Transform view = fly.view();
 		Transform model = Transform();
 		Transform mvp = projection * view * model;
 
@@ -257,17 +281,17 @@ public:
 		program_uniform(program, "view", view);
 		program_uniform(program, "model", model);
 		program_uniform(program, "lightSpace", sunMVP);
-		program_uniform(program, "viewWorldPos", m_camera.position());
+		program_uniform(program, "viewWorldPos", fly.position());
 		program_uniform(program, "lightWorldPos", sun.position());
 		program_use_texture(program, "shadowMap", 0, depthTexture);
 
 		// Work with a limited number of textures
 		// If more texture are needed, have to bind textures in loop
-		program_use_texture(program, "grassTop",  1, grassTopTexture);
-		program_use_texture(program, "grassSide", 2, grassSideTexture);
-		program_use_texture(program, "sand",      3, sandTexture);
-		program_use_texture(program, "stone",     4, stoneTexture);
-		program_use_texture(program, "clay",      5, clayTexture);
+		program_use_texture(program, "clay",  1, clayTexture);
+		program_use_texture(program, "grass", 2, grassTexture);
+		program_use_texture(program, "sand",  3, sandTexture);
+		program_use_texture(program, "snow",  4, snowGrassTexture);
+		program_use_texture(program, "stone", 5, stoneTexture);
 
 		// glBindVertexArray(vao);	// already binded
 
@@ -288,7 +312,7 @@ protected:
 	// Scene
 	Scene scene;
 	Mesh cube;
-	// Mesh billboard;
+	Mesh billboard;
 	GLuint vertex_buffer;
 	GLuint texcoords_buffer;
 	GLuint normal_buffer;
@@ -296,12 +320,13 @@ protected:
 	GLuint vao;
 
 	// Color pass
-	GLuint grassTopTexture;
-	GLuint grassSideTexture;
-	GLuint sandTexture;
-	GLuint stoneTexture;
 	GLuint clayTexture;
+	GLuint grassTexture;
+	GLuint sandTexture;
+	GLuint snowGrassTexture;
+	GLuint stoneTexture;
 
+	FlyCamera fly;
 	Orbiter m_camera;
 	GLuint program;
 
