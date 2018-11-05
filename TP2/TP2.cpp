@@ -23,23 +23,35 @@ Transform ortho(float left, float right, float top, float bottom, float near, fl
 		0, 0, -(2.f/(far-near)), -((far+near)/(far-near)));
 }
 
-ImageData assemble(const ImageData& upLeft, const ImageData& upRight, const ImageData& downLeft, const ImageData& downRight) {
-	assert(upLeft.channels == upRight.channels && upRight.channels == downLeft.channels && downLeft.channels == downRight.channels);
-	assert(upLeft.width == downLeft.width && upRight.width == downRight.width);
-	assert(upLeft.height == upRight.height && downLeft.height == downRight.height);
-	ImageData ret(upLeft.width + upRight.width, upLeft.height + downLeft.height, upLeft.channels);
+ImageData assemble(const ImageData& left, const ImageData& center, const ImageData& right) {
+	assert(left.channels == center.channels && center.channels == right.channels);
+	assert(left.width == center.width && center.width == right.width);
+	assert(left.height == center.height && center.height == right.height);
+	ImageData ret(left.width, 3 * left.height, left.channels);
 
-	ret.data.assign(upLeft.data.begin(), upLeft.data.end());
-	ret.data.insert(ret.data.end(), upRight.data.begin(), upRight.data.end());
-	ret.data.insert(ret.data.end(), downLeft.data.begin(), downLeft.data.end());
-	ret.data.insert(ret.data.end(), downRight.data.begin(), downRight.data.end());
+	ret.data.assign(left.data.begin(), left.data.end());
+	ret.data.insert(ret.data.end(), center.data.begin(), center.data.end());
+	ret.data.insert(ret.data.end(), right.data.begin(), right.data.end());
 
 	return ret;
 }
 
 ImageData assemble(const ImageData& image) {
-	return assemble(image, image, image, image);
+	return assemble(image, image, image);
 }
+
+/** Generate one buffer, remember to destroy after use */
+GLuint createBuffer(GLsizeiptr dataSize, const GLvoid* pData) {
+	GLuint buffer;
+	glGenBuffers(1, &buffer);
+	glBindBuffer(GL_ARRAY_BUFFER, buffer);
+	{
+		glBufferData(GL_ARRAY_BUFFER, dataSize, pData, GL_STATIC_DRAW);
+	}
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	return buffer;
+}
+
 
 
 class TP : public AppTime
@@ -62,18 +74,20 @@ public:
 		std::cout << "Nombre d'instances = " << scene.instances.size() << std::endl;
 
 		// base Textures
-		auto grassTopData = read_image_data("data/grass_top.png");
+		auto clayData = read_image_data("data/clay.png");
+		auto dirtData = read_image_data("data/dirt.png");
 		auto grassSideData = read_image_data("data/grass_side.png");
+		auto grassTopData = read_image_data("data/grass_top.png");
 		auto sandData = read_image_data("data/sand.png");
 		auto stoneData = read_image_data("data/stone.png");
-		auto clayData = read_image_data("data/clay.png");
 		auto snowData = read_image_data("data/snow.png");
+		auto snowGrassSideData = read_image_data("data/grass_side_snowed.png");
 
 		// Textures uniforms
 		clayTexture = make_texture(1, assemble(clayData));
-		grassTexture = make_texture(2, assemble(grassTopData, grassSideData, grassTopData, grassTopData));
+		grassTexture = make_texture(2, assemble(grassTopData, grassSideData, dirtData));
 		sandTexture = make_texture(3, assemble(sandData));
-		snowGrassTexture = make_texture(4, assemble(snowData));
+		snowGrassTexture = make_texture(4, assemble(snowData, snowGrassSideData, dirtData));
 		stoneTexture = make_texture(5, assemble(stoneData));
 
 		// Camera
@@ -93,37 +107,16 @@ public:
 		//glUseProgram(program);
 
 		// Vertex buffer (location=0)
-		glGenBuffers(1, &vertex_buffer);
-		glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
-		{
-			glBufferData(GL_ARRAY_BUFFER, cube.vertex_buffer_size(), cube.vertex_buffer(), GL_STATIC_DRAW);
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		vertex_buffer = createBuffer(cube.vertex_buffer_size(), cube.vertex_buffer());
 
 		// Texture coords buffer (location=1)
-		glGenBuffers(1, &texcoords_buffer);
-		glBindBuffer(GL_ARRAY_BUFFER, texcoords_buffer);
-		{
-			glBufferData(GL_ARRAY_BUFFER, cube.texcoord_buffer_size(), cube.texcoord_buffer(), GL_STATIC_DRAW);
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		texcoords_buffer = createBuffer(cube.texcoord_buffer_size(), cube.texcoord_buffer());
 
 		// Normal buffer (location=2)
-		glGenBuffers(1, &normal_buffer);
-		glBindBuffer(GL_ARRAY_BUFFER, normal_buffer);
-		{
-			//glBufferData(GL_ARRAY_BUFFER, scene.normals.size() * sizeof(vec3), scene.normals.data(), GL_STATIC_DRAW);	//normals from heightmap
-			glBufferData(GL_ARRAY_BUFFER, cube.normal_buffer_size(), cube.normal_buffer(), GL_STATIC_DRAW);	//cube's normals
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		normal_buffer = createBuffer(cube.normal_buffer_size(), cube.normal_buffer());
 
 		// instances (location=5)
-		glGenBuffers(1, &instance_buffer);
-		glBindBuffer(GL_ARRAY_BUFFER, instance_buffer);
-		{
-			glBufferData(GL_ARRAY_BUFFER, scene.instances.size() * sizeof(vec3), scene.instances.data(), GL_STATIC_DRAW);
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		instance_buffer = createBuffer(scene.instances.size() * sizeof(vec3), scene.instances.data());
 
 		// VAO
 		glGenVertexArrays(1, &vao);

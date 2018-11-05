@@ -97,8 +97,6 @@ float shadow(vec4 lightSpacePosition, vec3 lightDir, vec3 normal) {
 
 void main()
 {
-
-	vec3 baseColor;
 	vec4 texture_color;
 
 	vec3 green =  vec3(0, 0.5, 0);
@@ -107,25 +105,22 @@ void main()
 	vec3 grey =   vec3(0.57, 0.55, 0.52);
 	vec3 white =  vec3(1.0);
 
-	if (fragWorldPos.y < 1.5) {
-		baseColor = white;
-		texture_color= texture(clay, vertexTexCoord);
+	if (fragWorldPos.y <= 1.5) {
+		texture_color = texture(clay, vertexTexCoord);
 	}
-	else if (fragWorldPos.y < 3.5) {
-		baseColor = white;
-		texture_color= texture(sand, vertexTexCoord);
+	else if (fragWorldPos.y <= 3.5) {
+		texture_color = texture(sand, vertexTexCoord);
 	}
-	else if (fragWorldPos.y < 10.5) {
-		baseColor = green;
-		texture_color= texture(grass, vertexTexCoord);
+	else if (fragWorldPos.y <= 10.5) {
+		texture_color = texture(grass, vertexTexCoord);
+		if (vertexTexCoord.y <= 0.333)
+			texture_color = texture_color * vec4(0.16, 0.215, 0.172, 1.0);
 	}
-	else if (fragWorldPos.y < 30.5) {
-		baseColor = white;
-		texture_color= texture(stone, vertexTexCoord);
+	else if (fragWorldPos.y <= 30.5) {
+		texture_color = texture(stone, vertexTexCoord);
 	}
-	else if (fragWorldPos.y < 40.5) {
-		baseColor = white;
-		texture_color= texture(snow, vertexTexCoord);
+	else if (fragWorldPos.y <= 40.5) {
+		texture_color = texture(snow, vertexTexCoord);
 	}
 
 
@@ -139,7 +134,7 @@ void main()
 	// Shadowmapping
 	float inShadow = shadow(lightSpaceFragPos, lightWorldPos - fragWorldPos, fragNormal);
 
-	fragment_color = (texture_color * vec4(baseColor, 1.0)) * (1.0 - inShadow) * cos_theta;
+	fragment_color = texture_color * (1.0 - inShadow) * cos_theta;
 	// material_color = base_color * diffuse + light_color * specular
 	// fragment_color = shadowfactor * material_color
 }
