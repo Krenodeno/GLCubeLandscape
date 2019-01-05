@@ -14,6 +14,7 @@ dessous et les côtés. Comme il y a peu de textures, elles sont toutes bindées
 La texture à appliquer au cubes est choisi dans le fragment shader en fonction de l'altitude.
 Le shadow mapping est fonctionnel, il permet d'avoir les ombres des montagnes sur les autres.
 Le "soleil" fait le tour du terrain en appuyant sur G.
+Une caméra première personne est utilisée pour se déplacer sur le terrain.
 
 ## Build
 Éditer `premake5.lua` pour indiquer le chemin vers gkit2light.
@@ -26,7 +27,10 @@ Exécuter le programme :
 ./bin/TP2
 ```
 
+## Executer
 Appuyer sur `G` pour faire tourner le soleil.
+`Z` pour avancer, `Q` et `D` pour aller à gauche et à droite respectivement.
+`S` prend une capture du framebuffer et l'enregistre sur le disque.
 
 ## TODO-liste
 - [x] Générer positions d'instances de cubes à partir de la Heightmap
