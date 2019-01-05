@@ -123,7 +123,7 @@ void main()
 		texture_color = texture(snow, vertexTexCoord);
 	}
 
-	if (texture_color.a = 0.0)
+	if (texture_color.a == 0.0)
 		discard;
 
 	// Blinn-Phong shadind
