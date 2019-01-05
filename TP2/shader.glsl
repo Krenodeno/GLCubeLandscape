@@ -123,6 +123,8 @@ void main()
 		texture_color = texture(snow, vertexTexCoord);
 	}
 
+	if (texture_color.a = 0.0)
+		discard;
 
 	// Blinn-Phong shadind
 	float k = 0.5;					// could be a channel of a texture
