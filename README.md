@@ -18,5 +18,5 @@ Appuyer sur `g` pour faire tourner le soleil.
     - [x] Test visibilité
       - [ ] Gestion de la mémoire (FIFO VBO)
 - [x] Blinn-Phong
-- [ ] Textures en fonction de l'altitude/la pente
+- [x] Textures en fonction de l'altitude/la pente
 - [x] Shdow Mapping
