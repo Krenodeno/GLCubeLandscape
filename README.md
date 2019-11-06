@@ -20,7 +20,7 @@ Le "soleil" fait le tour du terrain en appuyant sur G.
 
 Une caméra première personne est utilisée pour se déplacer sur le terrain.
 
-![GitHub Logo](screencap.png)
+![screen capture](screencap.png)
 
 ## Dépendances
 La librairie gKit2Light est requise pour compiler les exécutables. Elle est disponible [à cette adresse](https://forge.univ-lyon1.fr/Alexandre.Meyer/gkit2light).
