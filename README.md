@@ -20,6 +20,8 @@ Le "soleil" fait le tour du terrain en appuyant sur G.
 
 Une caméra première personne est utilisée pour se déplacer sur le terrain.
 
+![GitHub Logo](screencap.png)
+
 ## Build
 Éditer `premake5.lua` pour indiquer le chemin vers gkit2light.
 Exécuter le script à la racine du projet suivant pour générer les fichiers de build et compiler :
